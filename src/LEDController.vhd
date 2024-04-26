@@ -35,11 +35,11 @@ entity LEDController is
 Port (
 	sysclk : in STD_LOGIC := '0';
 	btn    : in STD_LOGIC_VECTOR(1 downto 0) := (others => '0');
-	led    : out STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
+	led    : out STD_LOGIC_VECTOR(3 downto 0) := (others => '0')
      );
 end LEDController;
 
-architecture Behavioral of LEDController is
+architecture rtl of LEDController is
 begin
 
 	process (btn) is
@@ -54,8 +54,8 @@ begin
 			when "11" =>
 				led <= "1000";
 			when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
-				led <= others('X');
+				led <= (others => 'X');
 		end case;
 	end process;
 
-end Behavioral;
+end rtl;
