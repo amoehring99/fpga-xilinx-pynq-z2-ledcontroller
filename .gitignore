@@ -1,4 +1,4 @@
 vivado/
 .Xil
-hdl_checker.json
 .hdl_checker
+.hdl_checker.config
