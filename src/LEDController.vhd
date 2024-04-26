@@ -33,15 +33,29 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity LEDController is
 Port (
-	sysclk : in STD_LOGIC;
-	btn[3:0] : in STD_LOGIC_VECTOR(3 downto 0);
-	led[3:0] : out STD_LOGIC_VECTOR(3 downto 0);
+	sysclk : in STD_LOGIC := '0';
+	btn    : in STD_LOGIC_VECTOR(1 downto 0) := (others => '0');
+	led    : out STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
      );
 end LEDController;
 
 architecture Behavioral of LEDController is
-
 begin
 
+	process (btn) is
+	begin	
+		case btn is
+			when "00" =>
+				led <= "0001";
+			when "01" =>
+				led <= "0010";
+			when "10" =>
+				led <= "0100";
+			when "11" =>
+				led <= "1000";
+			when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
+				led <= others('X');
+		end case;
+	end process;
 
 end Behavioral;
