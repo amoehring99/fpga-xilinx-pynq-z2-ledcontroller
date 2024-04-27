@@ -1,4 +1,12 @@
+# vivado files
 vivado/
 .Xil
+*vivado*.str
+
+# linting files
 .hdl_checker
 .hdl_checker.config
+vhdl_ls.toml
+
+# synthesis files
+build/
