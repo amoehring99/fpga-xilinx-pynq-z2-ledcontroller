@@ -35,9 +35,25 @@ entity LEDControllerTb is
 --  Port ( );
 end LEDControllerTb;
 
-architecture rtl of LEDControllerTb is
+architecture sim of LEDControllerTb is
+
+	signal clk : std_logic := '0';
+	signal btn : std_logic_vector(1 downto 0) := (others => '0');
+	signal led : std_logic_vector(3 downto 0) := (others => '0');
 
 begin
+	-- Testbench Process
+	process is
+	begin
+		wait for 10 ns;
+		btn <= "00";
+		wait for 10 ns;
+		btn <= "01";
+		wait for 10 ns;
+		btn <= "10";
+		wait for 10 ns;
+		btn <= "11";
+		wait;
+	end process;
 
-
-end rtl;
+end sim;
