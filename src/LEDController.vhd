@@ -33,9 +33,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity LEDController is
 Port (
-	sysclk : in STD_LOGIC := '0';
-	btn    : in STD_LOGIC_VECTOR(1 downto 0) := (others => '0');
-	led    : out STD_LOGIC_VECTOR(3 downto 0) := (others => '0')
+	btn    : in STD_LOGIC_VECTOR(1 downto 0);
+	led    : out STD_LOGIC_VECTOR(3 downto 0)
      );
 end LEDController;
 

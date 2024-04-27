@@ -37,15 +37,20 @@ end LEDControllerTb;
 
 architecture sim of LEDControllerTb is
 
-	signal clk : std_logic := '0';
 	signal btn : std_logic_vector(1 downto 0) := (others => '0');
 	signal led : std_logic_vector(3 downto 0) := (others => '0');
 
 begin
+
+	i_LEDController : entity work.LEDController(rtl)
+		port map (
+			btn => btn,
+			led => led
+		);
+
 	-- Testbench Process
 	process is
 	begin
-		wait for 10 ns;
 		btn <= "00";
 		wait for 10 ns;
 		btn <= "01";
