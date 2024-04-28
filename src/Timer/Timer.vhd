@@ -35,11 +35,12 @@ entity timer is
     clock_frequency_hz : integer
   );
   port (
-    clk     : in    std_logic;
-    n_rst   : in    std_logic;
-    seconds : inout integer;
-    minutes : inout integer;
-    houres  : inout integer
+    clk         : in    std_logic;
+    n_rst       : in    std_logic;
+    miliseconds : inout integer;
+    seconds     : inout integer;
+    minutes     : inout integer;
+    houres      : inout integer
   );
 end entity timer;
 
@@ -90,7 +91,8 @@ begin
         houres  <= 0;
       else
         -- clock frequency is ticks per second -> if this wraps, one second has passed
-        increment_wrap(ticks, clock_frequency_hz, true, wrap);
+        increment_wrap(ticks, clock_frequency_hz / 1000, true, wrap);
+        increment_wrap(miliseconds, 1000, wrap, wrap);
         increment_wrap(seconds, 60, wrap, wrap);
         increment_wrap(minutes, 60, wrap, wrap);
         increment_wrap(houres, 24, wrap, wrap);
