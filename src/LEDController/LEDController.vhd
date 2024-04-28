@@ -51,18 +51,23 @@ begin
 
     case btn is
 
+      -- if no button is pressed, every other LED should be turned on
       when "00" =>
 
         led <= "0101";
 
+      -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
       when "01" =>
 
         led <= "0010";
 
+      -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
+      -- of LEDs on and off (at least 4)
       when "10" =>
 
         led <= "0100";
 
+      -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
       when "11" =>
 
         led <= "1000";
