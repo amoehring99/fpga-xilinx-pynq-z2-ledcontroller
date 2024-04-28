@@ -1,5 +1,3 @@
-.gitignore
-
 # vivado files
 vivado/
 .Xil
