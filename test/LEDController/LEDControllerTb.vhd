@@ -68,6 +68,7 @@ begin
 
   -- Testbench Process
   -- TODO:  dirver not generic for led_code and btn_code
+  -- TODO: use assert to improve testbench
   drive_button : process is
   begin
 
