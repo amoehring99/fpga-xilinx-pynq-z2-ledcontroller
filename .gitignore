@@ -1,3 +1,5 @@
+.gitignore
+
 # vivado files
 vivado/
 .Xil
@@ -10,3 +12,6 @@ vhdl_ls.toml
 
 # synthesis files
 build/
+
+# vim session
+Session.vim
