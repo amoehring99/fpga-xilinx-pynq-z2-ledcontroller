@@ -40,7 +40,7 @@ entity timer is
     milliseconds : inout integer;
     seconds      : inout integer;
     minutes      : inout integer;
-    houres       : inout integer
+    hours        : inout integer
   );
 end entity timer;
 
@@ -88,14 +88,14 @@ begin
         ticks   <= 0;
         seconds <= 0;
         minutes <= 0;
-        houres  <= 0;
+        hours   <= 0;
       else
         -- clock frequency is ticks per second -> if this wraps, one second has passed
         increment_wrap(ticks, clock_frequency_hz / 1000, true, wrap);
         increment_wrap(milliseconds, 1000, wrap, wrap);
         increment_wrap(seconds, 60, wrap, wrap);
         increment_wrap(minutes, 60, wrap, wrap);
-        increment_wrap(houres, 24, wrap, wrap);
+        increment_wrap(hours, 24, wrap, wrap);
       end if;
     end if;
 
