@@ -36,27 +36,38 @@ end entity ledcontrollertb;
 
 architecture sim of ledcontrollertb is
 
-  signal btn : std_logic_vector(1 downto 0);
-  signal led : std_logic_vector(3 downto 0);
+  constant led_count : integer := 4;
+  constant btn_count : integer := 2;
+
+  signal led : std_logic_vector(led_count - 1 downto 0);
+  signal btn : std_logic_vector(btn_count - 1 downto 0);
 
   -- Component declaration
   component ledcontroller is
+    generic (
+      led_count : integer;
+      btn_count : integer
+    );
     port (
-      btn : in    std_logic_vector(1 downto 0);
-      led : out   std_logic_vector(3 downto 0)
+      btn : in    std_logic_vector(btn_count - 1 downto 0);
+      led : out   std_logic_vector(btn_count - 1 downto 0)
     );
   end component;
 
 begin
 
-  -- Component instantiation
   i_ledcontroller : component ledcontroller
+    generic map (
+      led_count => led_count,
+      btn_count => btn_count
+    )
     port map (
       btn => btn,
       led => led
     );
 
   -- Testbench Process
+  -- TODO:  dirver not generic for led_code and btn_code
   drive_button : process is
   begin
 

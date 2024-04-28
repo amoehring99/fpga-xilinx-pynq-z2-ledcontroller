@@ -31,9 +31,13 @@ library ieee;
 -- use UNISIM.VComponents.all;
 
 entity ledcontroller is
+  generic (
+    led_count : integer;
+    btn_count : integer
+  );
   port (
-    btn : in    std_logic_vector(1 downto 0);
-    led : out   std_logic_vector(3 downto 0)
+    btn : in    std_logic_vector(btn_count - 1 downto 0);
+    led : out   std_logic_vector(led_count - 1 downto 0)
   );
 end entity ledcontroller;
 
@@ -41,6 +45,7 @@ architecture rtl of ledcontroller is
 
 begin
 
+  -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (btn) is
   begin
 
