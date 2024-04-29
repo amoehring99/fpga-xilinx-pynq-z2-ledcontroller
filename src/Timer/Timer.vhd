@@ -85,10 +85,11 @@ begin
 
     if rising_edge(clk) then
       if (n_rst = '0') then
-        ticks   <= 0;
-        seconds <= 0;
-        minutes <= 0;
-        hours   <= 0;
+        ticks        <= 0;
+        milliseconds <= 0;
+        seconds      <= 0;
+        minutes      <= 0;
+        hours        <= 0;
       else
         -- clock frequency is ticks per second -> if this wraps, one second has passed
         increment_wrap(ticks, clock_frequency_hz / 1000, true, wrap);

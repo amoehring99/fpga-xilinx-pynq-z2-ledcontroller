@@ -36,7 +36,10 @@ end entity timertb;
 
 architecture sim of timertb is
 
-  constant clock_frequency_hz : integer := 10;
+  constant clock_frequency_hz : integer := 1600;
+
+  --  signal clk   : std_logic;
+  --  signal n_rst : std_logic;
 
   signal clk   : std_logic := '1';
   signal n_rst : std_logic := '0';
@@ -75,14 +78,6 @@ begin
       minutes      => minutes,
       hours        => hours
     );
-
-  initialize : process is
-  begin
-
-    clk   <= '1';
-    n_rst <= '0';
-
-  end process initialize;
 
   -- inline process to generate clock
   -- change clock level after half clock period
