@@ -36,10 +36,8 @@ end entity timertb;
 
 architecture sim of timertb is
 
-  constant clock_frequency_hz : integer := 1600;
-
-  --  signal clk   : std_logic;
-  --  signal n_rst : std_logic;
+  -- must by divisible by 1000 (to calculate milliseconds)
+  constant clock_frequency_hz : integer := 4000;
 
   signal clk   : std_logic := '1';
   signal n_rst : std_logic := '0';
@@ -81,18 +79,78 @@ begin
 
   -- inline process to generate clock
   -- change clock level after half clock period
-  clk <= not clk after ((1000 ms / clock_frequency_hz) / 2);
+  clk <= not clk after ((1 sec / clock_frequency_hz) / 2);
 
-  -- TODO: use assert to improve testbench
   timer_tb : process is
   begin
 
-    -- wait 2 clock cycles before starting timer
-    wait until rising_edge(clk);
+    -- wait one clock cycle for initialization
+    -- of milliseconds, seconds, minutes, hours signals to take effect
     wait until rising_edge(clk);
 
     -- start timer
     n_rst <= '1';
+
+    -- wait one clock cycle for setting n_rst to take effect
+    -- NOTE: kinda unknown state at exact point of changing n_rst
+    wait until rising_edge(clk);
+
+    -- test timer initialization
+    assert milliseconds = 0
+      report "milliseconds = " & integer'image(milliseconds) & " expected 0"
+      severity FAILURE;
+    assert seconds = 0
+      report "seconds = " & integer'image(seconds) & " expected 0"
+      severity FAILURE;
+    assert minutes = 0
+      report "minutes = " & integer'image(minutes) & " expected 0"
+      severity FAILURE;
+    assert hours = 0
+      report "hours = " & integer'image(hours) & " expected 0"
+      severity FAILURE;
+
+    -- wait for 1 hour 32 minutes 45 seconds 678 milliseconds to pass
+    wait for 1 hr + 32 min + 45 sec + 678 ms;
+
+    -- test timer functionality
+    assert milliseconds = 678
+      report "milliseconds = " & integer'image(milliseconds) & " expected 678"
+      severity FAILURE;
+    assert seconds = 45
+      report "seconds = " & integer'image(seconds) & " expected 45"
+      severity FAILURE;
+    assert minutes = 32
+      report "minutes = " & integer'image(minutes) & " expected 32"
+      severity FAILURE;
+    assert hours = 1
+      report "hours = " & integer'image(hours) & " expected 1"
+      severity FAILURE;
+
+    -- wait to reset timer in order to avoid unknown state
+    -- by setting n_rst to '0' and reading timer values simultaneously
+    wait until rising_edge(clk);
+    n_rst <= '0';
+    -- wait for n_rst signal to take effect
+    wait until rising_edge(clk);
+    -- wait for timer to reset time signals to 0
+    wait until rising_edge(clk);
+
+    -- test if timer reset successfully
+    assert milliseconds = 0
+      report "milliseconds = " & integer'image(milliseconds) & " expected 0"
+      severity FAILURE;
+
+    assert seconds = 0
+      report "seconds = " & integer'image(seconds) & " expected 0"
+      severity FAILURE;
+
+    assert minutes = 0
+      report "minutes = " & integer'image(minutes) & " expected 0"
+      severity FAILURE;
+
+    assert hours = 0
+      report "hours = " & integer'image(hours) & " expected 0"
+      severity FAILURE;
 
     wait;
 

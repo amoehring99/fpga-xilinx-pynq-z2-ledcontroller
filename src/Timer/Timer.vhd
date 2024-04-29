@@ -30,6 +30,9 @@ library ieee;
 -- library UNISIM;
 -- use UNISIM.VComponents.all;
 
+-- NOTE: it takes a rising edge for initialisation of signals
+-- -> keep in mind to wait until rising edge before reading values
+
 entity timer is
   generic (
     clock_frequency_hz : integer
@@ -83,6 +86,8 @@ begin
 
   begin
 
+    -- NOTE: it takes a rising edge for initialisation of signals
+    -- -> keep in mind to wait until rising edge before reading values
     if rising_edge(clk) then
       if (n_rst = '0') then
         ticks        <= 0;
