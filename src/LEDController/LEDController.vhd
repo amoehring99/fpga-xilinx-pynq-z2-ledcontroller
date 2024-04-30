@@ -32,8 +32,8 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    led_count : integer;
-    btn_count : integer
+    led_count : natural;
+    btn_count : natural
   );
   port (
     btn : in    std_logic_vector(btn_count - 1 downto 0);

@@ -35,28 +35,28 @@ library ieee;
 
 entity timer is
   generic (
-    clock_frequency_hz : integer
+    clock_frequency_hz : natural
   );
   port (
     clk          : in    std_logic;
     n_rst        : in    std_logic;
-    milliseconds : inout integer range 0 to 999;
-    seconds      : inout integer range 0 to 59;
-    minutes      : inout integer range 0 to 59;
-    hours        : inout integer range 0 to 23
+    milliseconds : inout natural range 0 to 999;
+    seconds      : inout natural range 0 to 59;
+    minutes      : inout natural range 0 to 59;
+    hours        : inout natural range 0 to 23
   );
 end entity timer;
 
 architecture rtl of timer is
 
-  signal ticks : integer range 0 to (clock_frequency_hz / 1000);
+  signal ticks : natural range 0 to (clock_frequency_hz / 1000);
 
   procedure increment_wrap (
     -- count up ticks / seconds / minutes ...
-    signal counter : inout integer range 0 to 999;
+    signal counter : inout natural range 0 to 999;
     -- wrap when next higher time value is reached,
     -- e.g. after 60 seconds
-    constant wrap_value : in integer range 1 to 999;
+    constant wrap_value : in natural range 1 to 999;
     -- only enable when next lower time value was reached
     -- e.g. increase minute if seconds wrapped
     constant enable : in boolean;

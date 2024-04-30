@@ -37,28 +37,28 @@ end entity timertb;
 architecture sim of timertb is
 
   -- must by divisible by 1000 (to calculate milliseconds)
-  constant clock_frequency_hz : integer := 4000;
+  constant clock_frequency_hz : natural := 4000;
 
   signal clk   : std_logic := '1';
   signal n_rst : std_logic := '0';
 
-  signal milliseconds : integer range 0 to 999;
-  signal seconds      : integer range 0 to 59;
-  signal minutes      : integer range 0 to 59;
-  signal hours        : integer range 0 to 23;
+  signal milliseconds : natural range 0 to 999;
+  signal seconds      : natural range 0 to 59;
+  signal minutes      : natural range 0 to 59;
+  signal hours        : natural range 0 to 23;
 
   component timer is
     generic (
-      clock_frequency_hz : integer
+      clock_frequency_hz : natural
     );
     port (
       clk   : in    std_logic;
       n_rst : in    std_logic;
 
-      milliseconds : inout integer;
-      seconds      : inout integer;
-      minutes      : inout integer;
-      hours        : inout integer
+      milliseconds : inout natural;
+      seconds      : inout natural;
+      minutes      : inout natural;
+      hours        : inout natural
     );
   end component;
 
@@ -97,16 +97,16 @@ begin
 
     -- test timer initialization
     assert milliseconds = 0
-      report "milliseconds = " & integer'image(milliseconds) & " expected 0"
+      report "milliseconds = " & natural'image(milliseconds) & " expected 0"
       severity FAILURE;
     assert seconds = 0
-      report "seconds = " & integer'image(seconds) & " expected 0"
+      report "seconds = " & natural'image(seconds) & " expected 0"
       severity FAILURE;
     assert minutes = 0
-      report "minutes = " & integer'image(minutes) & " expected 0"
+      report "minutes = " & natural'image(minutes) & " expected 0"
       severity FAILURE;
     assert hours = 0
-      report "hours = " & integer'image(hours) & " expected 0"
+      report "hours = " & natural'image(hours) & " expected 0"
       severity FAILURE;
 
     -- wait for 1 hour 32 minutes 45 seconds 678 milliseconds to pass
@@ -114,16 +114,16 @@ begin
 
     -- test timer functionality
     assert milliseconds = 678
-      report "milliseconds = " & integer'image(milliseconds) & " expected 678"
+      report "milliseconds = " & natural'image(milliseconds) & " expected 678"
       severity FAILURE;
     assert seconds = 45
-      report "seconds = " & integer'image(seconds) & " expected 45"
+      report "seconds = " & natural'image(seconds) & " expected 45"
       severity FAILURE;
     assert minutes = 32
-      report "minutes = " & integer'image(minutes) & " expected 32"
+      report "minutes = " & natural'image(minutes) & " expected 32"
       severity FAILURE;
     assert hours = 1
-      report "hours = " & integer'image(hours) & " expected 1"
+      report "hours = " & natural'image(hours) & " expected 1"
       severity FAILURE;
 
     -- wait to reset timer in order to avoid unknown state
@@ -137,19 +137,19 @@ begin
 
     -- test if timer reset successfully
     assert milliseconds = 0
-      report "milliseconds = " & integer'image(milliseconds) & " expected 0"
+      report "milliseconds = " & natural'image(milliseconds) & " expected 0"
       severity FAILURE;
 
     assert seconds = 0
-      report "seconds = " & integer'image(seconds) & " expected 0"
+      report "seconds = " & natural'image(seconds) & " expected 0"
       severity FAILURE;
 
     assert minutes = 0
-      report "minutes = " & integer'image(minutes) & " expected 0"
+      report "minutes = " & natural'image(minutes) & " expected 0"
       severity FAILURE;
 
     assert hours = 0
-      report "hours = " & integer'image(hours) & " expected 0"
+      report "hours = " & natural'image(hours) & " expected 0"
       severity FAILURE;
 
     wait;

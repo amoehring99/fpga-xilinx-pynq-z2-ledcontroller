@@ -36,8 +36,8 @@ end entity ledcontrollertb;
 
 architecture sim of ledcontrollertb is
 
-  constant led_count : integer := 4;
-  constant btn_count : integer := 2;
+  constant led_count : natural := 4;
+  constant btn_count : natural := 2;
 
   signal led : std_logic_vector(led_count - 1 downto 0);
   signal btn : std_logic_vector(btn_count - 1 downto 0);
@@ -45,8 +45,8 @@ architecture sim of ledcontrollertb is
   -- Component declaration
   component ledcontroller is
     generic (
-      led_count : integer;
-      btn_count : integer
+      led_count : natural;
+      btn_count : natural
     );
     port (
       btn : in    std_logic_vector(btn_count - 1 downto 0);
