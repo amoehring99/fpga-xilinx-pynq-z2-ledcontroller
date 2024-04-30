@@ -42,10 +42,10 @@ architecture sim of timertb is
   signal clk   : std_logic := '1';
   signal n_rst : std_logic := '0';
 
-  signal milliseconds : integer;
-  signal seconds      : integer;
-  signal minutes      : integer;
-  signal hours        : integer;
+  signal milliseconds : integer range 0 to 999;
+  signal seconds      : integer range 0 to 59;
+  signal minutes      : integer range 0 to 59;
+  signal hours        : integer range 0 to 23;
 
   component timer is
     generic (
