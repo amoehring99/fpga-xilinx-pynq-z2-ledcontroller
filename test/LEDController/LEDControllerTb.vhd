@@ -36,8 +36,11 @@ end entity ledcontrollertb;
 
 architecture sim of ledcontrollertb is
 
-  constant led_count : natural := 4;
-  constant btn_count : natural := 2;
+  constant led_count   : natural := 4;
+  constant btn_count   : natural := 2;
+  constant clk_freq_hz : natural := 4000;
+
+  signal clk : std_logic := '1';
 
   signal led : std_logic_vector(led_count - 1 downto 0);
   signal btn : std_logic_vector(btn_count - 1 downto 0);
@@ -45,12 +48,14 @@ architecture sim of ledcontrollertb is
   -- Component declaration
   component ledcontroller is
     generic (
-      led_count : natural;
-      btn_count : natural
+      clk_freq_hz : natural;
+      led_count   : natural;
+      btn_count   : natural
     );
     port (
+      clk : in    std_logic;
       btn : in    std_logic_vector(btn_count - 1 downto 0);
-      led : out   std_logic_vector(btn_count - 1 downto 0)
+      led : out   std_logic_vector(led_count - 1 downto 0)
     );
   end component;
 
@@ -58,26 +63,30 @@ begin
 
   i_ledcontroller : component ledcontroller
     generic map (
-      led_count => led_count,
-      btn_count => btn_count
+      clk_freq_hz => clk_freq_hz,
+      led_count   => led_count,
+      btn_count   => btn_count
     )
     port map (
+      clk => clk,
       btn => btn,
       led => led
     );
 
+  clk <= not clk after ((1 sec / clk_freq_hz) / 2);
+
   -- Testbench Process
-  -- TODO: dirver not generic for led_code and btn_code
+  -- TODO: dirver not generic for led_count and btn_count
   -- TODO: use assert to improve testbench
   drive_button : process is
   begin
 
     btn <= "00";
-    wait for 10 ns;
+    wait for 10000 ns;
     btn <= "01";
-    wait for 10 ns;
+    wait for 10000 ns;
     btn <= "10";
-    wait for 10 ns;
+    wait for 10000 ns;
     btn <= "11";
     wait;
 
