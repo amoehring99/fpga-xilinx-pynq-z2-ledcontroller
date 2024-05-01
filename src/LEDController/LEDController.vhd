@@ -32,10 +32,12 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    led_count : natural;
-    btn_count : natural
+    clk_freq_hz : natural;
+    led_count   : natural;
+    btn_count   : natural
   );
   port (
+    clk : in    std_logic;
     btn : in    std_logic_vector(btn_count - 1 downto 0);
     led : out   std_logic_vector(led_count - 1 downto 0)
   );
@@ -43,11 +45,44 @@ end entity ledcontroller;
 
 architecture rtl of ledcontroller is
 
+  signal n_blinking    : std_logic;
+  signal blink_freq_hz : natural range 1 to clk_freq_hz;
+  signal led_blinking  : std_logic_vector(led_count - 1 downto 0);
+
+  component led_blink is
+    generic (
+      clk_freq_hz   : natural;
+      blink_freq_hz : natural;
+      led_count     : natural
+    );
+    port (
+      clk   : in    std_logic;
+      n_rst : in    std_logic;
+      led   : out   std_logic_vector(led_count - 1 downto 0)
+    );
+  end component led_blink;
+
 begin
+
+  i_led_blink : component led_blink
+    generic map (
+      clk_freq_hz   => clk_freq_hz,
+      blink_freq_hz => blink_freq_hz,
+      led_count     => led_count
+    )
+    port map (
+      clk   => clk,
+      n_rst => n_blinking,
+      led   => led_blinking
+    );
 
   -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (btn) is
   begin
+
+    -- default values for led_blink component
+    blink_freq_hz <= 0;
+    n_blinking    <= '0';
 
     case btn is
 
@@ -59,7 +94,12 @@ begin
       -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
       when "01" =>
 
-        led <= "0010";
+        -- set blink frequency
+        blink_freq_hz <= 2;
+        -- enable led_blink component
+        n_blinking <= '1';
+        -- forward led_blinking signal to actual leds
+        led <= led_blinking;
 
       -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
       -- of LEDs on and off (at least 4)
