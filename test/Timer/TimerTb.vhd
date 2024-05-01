@@ -37,7 +37,7 @@ end entity timertb;
 architecture sim of timertb is
 
   -- must by divisible by 1000 (to calculate milliseconds)
-  constant clock_frequency_hz : natural := 4000;
+  constant clk_freq_hz : natural := 4000;
 
   signal clk   : std_logic := '1';
   signal n_rst : std_logic := '0';
@@ -49,7 +49,7 @@ architecture sim of timertb is
 
   component timer is
     generic (
-      clock_frequency_hz : natural
+      clk_freq_hz : natural
     );
     port (
       clk   : in    std_logic;
@@ -66,7 +66,7 @@ begin
 
   i_timer : component timer
     generic map (
-      clock_frequency_hz => clock_frequency_hz
+      clk_freq_hz => clk_freq_hz
     )
     port map (
       clk          => clk,
@@ -79,7 +79,7 @@ begin
 
   -- inline process to generate clock
   -- change clock level after half clock period
-  clk <= not clk after ((1 sec / clock_frequency_hz) / 2);
+  clk <= not clk after ((1 sec / clk_freq_hz) / 2);
 
   timer_tb : process is
   begin

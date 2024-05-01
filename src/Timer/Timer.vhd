@@ -35,7 +35,7 @@ library ieee;
 
 entity timer is
   generic (
-    clock_frequency_hz : natural
+    clk_freq_hz : natural
   );
   port (
     clk          : in    std_logic;
@@ -49,7 +49,7 @@ end entity timer;
 
 architecture rtl of timer is
 
-  signal ticks : natural range 0 to (clock_frequency_hz / 1000);
+  signal ticks : natural range 0 to (clk_freq_hz / 1000);
 
   procedure increment_wrap (
     -- count up ticks / seconds / minutes ...
@@ -97,7 +97,7 @@ begin
         hours        <= 0;
       else
         -- clock frequency is ticks per second -> if this wraps, one second has passed
-        increment_wrap(ticks, clock_frequency_hz / 1000, true, wrap);
+        increment_wrap(ticks, clk_freq_hz / 1000, true, wrap);
         increment_wrap(milliseconds, 1000, wrap, wrap);
         increment_wrap(seconds, 60, wrap, wrap);
         increment_wrap(minutes, 60, wrap, wrap);
