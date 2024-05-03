@@ -3,6 +3,9 @@ vivado/
 .Xil
 *vivado*.str
 
+# platformio files
+platformio.ini
+
 # linting files
 .hdl_checker
 .hdl_checker.config
