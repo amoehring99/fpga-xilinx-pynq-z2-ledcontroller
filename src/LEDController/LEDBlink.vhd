@@ -60,10 +60,9 @@ begin
       end if;
     else
       -- default led value
-      led     <= (others => '0');
       counter <= counter + 1;
-      if (counter = clk_freq_hz * blink_freq_hz) then
-        led     <= (others => '1');
+      if (counter = clk_freq_hz / blink_freq_hz) then
+        led     <= not led;
         counter <= 0;
       end if;
     end if;

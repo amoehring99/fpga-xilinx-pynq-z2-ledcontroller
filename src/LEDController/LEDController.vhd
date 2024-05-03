@@ -77,7 +77,7 @@ begin
     );
 
   -- TODO: statemachine not generic for led_count and btn_count
-  led_state_machine : process (btn) is
+  led_state_machine : process (clk) is
   begin
 
     -- default values for led_blink component

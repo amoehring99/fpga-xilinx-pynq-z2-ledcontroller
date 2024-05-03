@@ -82,11 +82,11 @@ begin
   begin
 
     btn <= "00";
-    wait for 10000 ns;
+    wait for 1 sec;
     btn <= "01";
-    wait for 10000 ns;
+    wait for 1 sec;
     btn <= "10";
-    wait for 10000 ns;
+    wait for 1 sec;
     btn <= "11";
     wait;
 
