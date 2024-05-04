@@ -32,9 +32,9 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    clk_freq_hz : natural;
-    led_count   : natural;
-    btn_count   : natural
+    clk_freq_hz : natural := 125_000_000;
+    led_count   : natural := 4;
+    btn_count   : natural := 2
   );
   port (
     clk : in    std_logic;

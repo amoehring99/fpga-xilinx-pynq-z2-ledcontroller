@@ -38,25 +38,26 @@ entity timer is
     clk_freq_hz : natural
   );
   port (
-    clk          : in    std_logic;
-    n_rst        : in    std_logic;
-    milliseconds : inout natural range 0 to 999;
-    seconds      : inout natural range 0 to 59;
-    minutes      : inout natural range 0 to 59;
-    hours        : inout natural range 0 to 23
+    clk   : in    std_logic;
+    n_rst : in    std_logic;
+    -- types have to match ticks type to be passed into increment_wrap
+    milliseconds : inout natural;
+    seconds      : inout natural;
+    minutes      : inout natural;
+    hours        : inout natural
   );
 end entity timer;
 
 architecture rtl of timer is
 
-  signal ticks : natural range 0 to (clk_freq_hz / 1000);
+  signal ticks : natural;
 
   procedure increment_wrap (
     -- count up ticks / seconds / minutes ...
-    signal counter : inout natural range 0 to 999;
+    signal counter : inout natural;
     -- wrap when next higher time value is reached,
     -- e.g. after 60 seconds
-    constant wrap_value : in natural range 1 to 999;
+    constant wrap_value : in natural;
     -- only enable when next lower time value was reached
     -- e.g. increase minute if seconds wrapped
     constant enable : in boolean;
