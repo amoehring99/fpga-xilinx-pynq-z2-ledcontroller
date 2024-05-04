@@ -1,43 +1,76 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
+-- Company:
+-- Engineer:
+--
 -- Create Date: 05/04/2024 02:57:14 PM
--- Design Name: 
+-- Design Name:
 -- Module Name: PWMGenerator - rtl
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Project Name:
+-- Target Devices:
+-- Tool Versions:
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+--
 ----------------------------------------------------------------------------------
 
-
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+library ieee;
+  use ieee.std_logic_1164.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+-- use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+-- library UNISIM;
+-- use UNISIM.VComponents.all;
 
-entity PWMGenerator is
---  Port ( );
-end PWMGenerator;
+entity pwmgenerator is
+  generic (
+    clk_freq_hz : natural;
+    pwm_freq_hz : natural;
+    -- in percent from 0 to 100 (75 means 75% high 25% low)
+    duty_cycle : natural
+  );
+  port (
+    clk        : in    std_logic;
+    n_rst      : in    std_logic;
+    pwm_signal : out   std_logic
+  );
+end entity pwmgenerator;
 
-architecture rtl of PWMGenerator is
+architecture rtl of pwmgenerator is
+
+  -- count for maximum of 60 seconds
+  signal counter : natural range  0 to clk_freq_hz * 60;
 
 begin
 
+  pwm : process (clk, n_rst) is
+  begin
 
-end rtl;
+    if (n_rst = '0') then
+      counter    <= 0;
+      pwm_signal <= '0';
+    else
+      if (rising_edge(clk)) then
+        counter <= counter + 1;
+        if (counter = (((clk_freq_hz / pwm_freq_hz) * duty_cycle) / 100) - 1) then
+          pwm_signal <= '0';
+        else
+          if (counter = (clk_freq_hz / pwm_freq_hz) - 1) then
+            pwm_signal <= '1';
+            counter    <= 0;
+          end if;
+        end if;
+      end if;
+    end if;
+
+  end process pwm;
+
+end architecture rtl;
