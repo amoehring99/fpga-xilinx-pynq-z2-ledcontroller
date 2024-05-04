@@ -5,6 +5,7 @@ vivado/
 
 # platformio files
 platformio.ini
+icebreaker.pcf
 
 # linting files
 .hdl_checker
