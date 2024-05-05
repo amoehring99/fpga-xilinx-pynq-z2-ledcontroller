@@ -55,6 +55,10 @@ architecture rtl of ledcontroller is
 
   signal dim_counter : natural;
 
+  -- TODO: initialize duty cycle to 100 (full brightness)
+  -- atm it is still set to 50 when the procedure is called
+  -- because it is still set from the previous state
+
   procedure dim_led (
 
     signal dim_pwm_signal : in std_logic;
