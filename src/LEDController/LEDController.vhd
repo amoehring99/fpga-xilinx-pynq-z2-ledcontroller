@@ -165,7 +165,7 @@ begin
           when "11" =>
 
             -- dims down led from full brightness to none in 3 seconds, lights up again when off
-            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, 120);
+            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, clk_freq_hz / 33);
 
           when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 
