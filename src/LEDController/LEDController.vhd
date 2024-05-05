@@ -35,17 +35,14 @@ entity ledcontroller is
     clk_freq_hz : natural
   );
   port (
-    clk : in    std_logic;
-    btn : in    std_logic_vector(1 downto 0);
-    led : out   std_logic_vector(3 downto 0)
+    clk   : in    std_logic;
+    n_rst : in    std_logic;
+    btn   : in    std_logic_vector(1 downto 0);
+    led   : out   std_logic_vector(3 downto 0)
   );
 end entity ledcontroller;
 
 architecture rtl of ledcontroller is
-
-  -- THIS SIGNAL IS THE ONLY USE OF AN INITIAL VALUE.
-  -- THIS MAY NEED TO CHANGE WHEN MIGRATING THIS DESIGN TO OTHER DEVICES.
-  signal n_resetsr : std_logic_vector(3 downto 0) := (others => '0');
 
   signal n_rst_state    : std_logic;
   signal n_rst_pwm      : std_logic;
@@ -58,6 +55,7 @@ architecture rtl of ledcontroller is
   -- TODO: initialize duty cycle to 100 (full brightness)
   -- atm it is still set to 50 when the procedure is called
   -- because it is still set from the previous state
+  -- try checking for last state and reset pwm generator when state changes
 
   procedure dim_led (
 
@@ -121,19 +119,9 @@ begin
       pwm_signal  => pwm_signal
     );
 
-  -- reset all system modules for signals to be initialized on startup
-  initialize_system : process (clk) is
-  begin
-
-    if rising_edge(clk) then
-      n_resetsr <= n_resetsr(2 downto 0) & '1';
-    end if;
-
-  end process initialize_system;
-
   -- set all reset signals to initialize processes
-  n_rst_pwm   <= n_resetsr(3);
-  n_rst_state <= n_resetsr(3);
+  n_rst_pwm   <= n_rst;
+  n_rst_state <= n_rst;
 
   -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (clk) is
@@ -142,8 +130,11 @@ begin
 
     -- state machine reset to initialize values
     if (n_rst_state = '0') then
-      led         <= (others => 'U');
-      dim_counter <= 0;
+      led            <= (others => 'U');
+      dim_counter    <= 0;
+      duty_cycle_pwm <= 0;
+      dim_counter    <= 0;
+      pwm_freq_hz    <= 0;
     else
       if (rising_edge(clk)) then
 

@@ -47,7 +47,7 @@ end entity pwmgenerator;
 architecture rtl of pwmgenerator is
 
   -- count for maximum of 60 seconds
-  signal counter : natural range  0 to clk_freq_hz * 60;
+  signal counter : natural;
 
 begin
 
