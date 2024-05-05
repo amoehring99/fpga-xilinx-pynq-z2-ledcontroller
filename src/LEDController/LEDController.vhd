@@ -72,11 +72,13 @@ architecture rtl of ledcontroller is
 
     dim_pwm_freq_hz <= clk_freq_hz / 1000;
 
+    -- count clock cycles until duty cycle (brightness) of led should be decreased by 1%
     if (io_dim_counter >= dim_rate) then
       io_dim_counter <= 0;
       if (dim_duty_cycle_pwm > 0) then
         dim_duty_cycle_pwm <= dim_duty_cycle_pwm - 1;
       else
+        -- wrap arround when duty cycle is 0 (turn led back on)
         dim_duty_cycle_pwm <= 100;
       end if;
     else
@@ -125,7 +127,7 @@ begin
 
   end process initialize_system;
 
-  -- set all reset signals
+  -- set all reset signals to initialize processes
   n_rst_pwm   <= n_resetsr(3);
   n_rst_state <= n_resetsr(3);
 
@@ -134,6 +136,7 @@ begin
 
   begin
 
+    -- state machine reset to initialize values
     if (n_rst_state = '0') then
       led         <= (others => 'U');
       dim_counter <= 0;
