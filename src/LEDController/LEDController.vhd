@@ -50,6 +50,7 @@ architecture rtl of ledcontroller is
   signal pwm_signal     : std_logic;
   signal duty_cycle_pwm : natural;
 
+  signal last_state  : std_logic_vector(1 downto 0);
   signal dim_counter : natural;
 
   -- TODO: initialize duty cycle to 100 (full brightness)
@@ -119,60 +120,108 @@ begin
       pwm_signal  => pwm_signal
     );
 
-  -- set all reset signals to initialize processes
-  n_rst_pwm   <= n_rst;
-  n_rst_state <= n_rst;
-
   -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (clk) is
 
-  begin
+    function state_changed (
+      current_btn : std_logic_vector(1 downto 0);
+      last_btn    : std_logic_vector(1 downto 0)
+    ) return boolean is
+    begin
 
-    -- state machine reset to initialize values
-    if (n_rst_state = '0') then
-      led            <= (others => 'U');
-      dim_counter    <= 0;
+      if (current_btn /= last_btn) then
+        return true;
+      else
+        return false;
+      end if;
+
+    end function;
+
+    procedure save_state is
+    begin
+
+      last_state <= btn;
+
+    end procedure;
+
+    procedure reset_pwm_generator is
+    begin
+
+      n_rst_pwm      <= '0';
+      pwm_freq_hz    <= 0;
       duty_cycle_pwm <= 0;
       dim_counter    <= 0;
-      pwm_freq_hz    <= 0;
+
+    end procedure;
+
+  begin
+
+    -- set all reset signals to initialize processes
+    if (n_rst = '0') then
+      n_rst_pwm   <= '0';
+      n_rst_state <= '0';
     else
-      if (rising_edge(clk)) then
+      -- state machine reset to initialize values
+      if (n_rst_state = '0') then
+        led            <= (others => 'U');
+        dim_counter    <= 0;
+        duty_cycle_pwm <= 0;
+        dim_counter    <= 0;
+        pwm_freq_hz    <= 0;
+      else
+        if (rising_edge(clk)) then
 
-        case btn is
+          case btn is
 
-          -- if no button is pressed, every other LED should be turned on
-          when "00" =>
+            -- if no button is pressed, every other LED should be turned on
+            when "00" =>
 
-            led <= "0101";
+              led <= "0101";
+              save_state;
 
-          -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
-          -- default led value
-          when "01" =>
+            -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
+            -- default led value
+            when "01" =>
 
-            -- set blink frequency
-            pwm_freq_hz    <= 1;
-            duty_cycle_pwm <= 50;
-            -- forward led_blinking signal to actual leds
-            led <= (others => pwm_signal);
+              if (state_changed(btn, last_state)) then
+                reset_pwm_generator;
+              else
+                n_rst_pwm <= '1';
+                -- set blink frequency
+                pwm_freq_hz    <= 1;
+                duty_cycle_pwm <= 50;
+                -- forward led_blinking signal to actual leds
+                led <= (others => pwm_signal);
+              end if;
 
-          -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
-          -- of LEDs on and off (at least 4)
-          when "10" =>
+              save_state;
 
-            led <= "0100";
+            -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
+            -- of LEDs on and off (at least 4)
+            when "10" =>
 
-          -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
-          when "11" =>
+              led <= "0100";
+              save_state;
 
-            -- dims down led from full brightness to none in 3 seconds, lights up again when off
-            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, 120);
+            -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
+            when "11" =>
 
-          when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
+              if (state_changed(btn, last_state)) then
+                reset_pwm_generator;
+              else
+                n_rst_pwm <= '1';
+                -- dims down led from full brightness to none in 3 seconds, lights up again when off
+                dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, 120);
+              end if;
+              save_state;
 
-            led <= (others => 'X');
+            when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 
-        end case;
+              led <= (others => 'X');
 
+          end case;
+
+        end if;
       end if;
     end if;
 
