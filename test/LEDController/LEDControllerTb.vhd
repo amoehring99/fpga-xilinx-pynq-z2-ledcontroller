@@ -42,15 +42,13 @@ architecture sim of ledcontrollertb is
 
   signal clk : std_logic := '1';
 
-  signal led : std_logic_vector(led_count - 1 downto 0);
-  signal btn : std_logic_vector(btn_count - 1 downto 0);
+  signal led : std_logic_vector(3 downto 0);
+  signal btn : std_logic_vector(1 downto 0);
 
   -- Component declaration
   component ledcontroller is
     generic (
-      clk_freq_hz : natural;
-      led_count   : natural;
-      btn_count   : natural
+      clk_freq_hz : natural
     );
     port (
       clk : in    std_logic;
@@ -63,9 +61,7 @@ begin
 
   i_ledcontroller : component ledcontroller
     generic map (
-      clk_freq_hz => clk_freq_hz,
-      led_count   => led_count,
-      btn_count   => btn_count
+      clk_freq_hz => clk_freq_hz
     )
     port map (
       clk => clk,

@@ -32,91 +32,151 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    clk_freq_hz : natural := 125_000_000;
-    led_count   : natural := 4;
-    btn_count   : natural := 2
+    clk_freq_hz : natural
   );
   port (
     clk : in    std_logic;
-    btn : in    std_logic_vector(btn_count - 1 downto 0);
-    led : out   std_logic_vector(led_count - 1 downto 0)
+    btn : in    std_logic_vector(1 downto 0);
+    led : out   std_logic_vector(3 downto 0)
   );
 end entity ledcontroller;
 
 architecture rtl of ledcontroller is
 
-  signal n_blinking    : std_logic;
-  signal blink_freq_hz : natural range 1 to clk_freq_hz;
-  signal led_blinking  : std_logic_vector(led_count - 1 downto 0);
+  -- THIS SIGNAL IS THE ONLY USE OF AN INITIAL VALUE.
+  -- THIS MAY NEED TO CHANGE WHEN MIGRATING THIS DESIGN TO OTHER DEVICES.
+  signal n_resetsr : std_logic_vector(3 downto 0) := (others => '0');
 
-  component led_blink is
+  signal n_rst_state    : std_logic;
+  signal n_rst_pwm      : std_logic;
+  signal pwm_freq_hz    : natural;
+  signal pwm_signal     : std_logic;
+  signal duty_cycle_pwm : natural;
+
+  signal dim_counter : natural;
+
+  procedure dim_led (
+
+    signal dim_pwm_signal : in std_logic;
+
+    signal dim_led         : out std_logic_vector(3 downto 0);
+    signal dim_pwm_freq_hz : out natural;
+
+    signal dim_duty_cycle_pwm : inout natural;
+    -- counts clock cycles until duty cycle (brightness) of led is decreased by 1%
+    signal io_dim_counter : inout natural;
+
+    constant dim_rate : in natural
+  ) is
+  begin
+
+    dim_pwm_freq_hz <= clk_freq_hz / 1000;
+
+    if (io_dim_counter >= dim_rate) then
+      io_dim_counter <= 0;
+      if (dim_duty_cycle_pwm > 0) then
+        dim_duty_cycle_pwm <= dim_duty_cycle_pwm - 1;
+      else
+        dim_duty_cycle_pwm <= 100;
+      end if;
+    else
+      io_dim_counter <= io_dim_counter + 1;
+    end if;
+
+    -- forward pwm signal to actual leds
+    dim_led <= (others => dim_pwm_signal);
+
+  end procedure;
+
+  component pwmgenerator is
     generic (
-      clk_freq_hz   : natural;
-      blink_freq_hz : natural;
-      led_count     : natural
+      clk_freq_hz : natural
     );
     port (
-      clk   : in    std_logic;
-      n_rst : in    std_logic;
-      led   : out   std_logic_vector(led_count - 1 downto 0)
+      clk         : in    std_logic;
+      n_rst       : in    std_logic;
+      pwm_freq_hz : in    natural;
+      duty_cycle  : in    natural;
+      pwm_signal  : out   std_logic
     );
-  end component led_blink;
+  end component pwmgenerator;
 
 begin
 
-  i_led_blink : component led_blink
+  i_pwmgenerator : component pwmgenerator
     generic map (
-      clk_freq_hz   => clk_freq_hz,
-      blink_freq_hz => blink_freq_hz,
-      led_count     => led_count
+      clk_freq_hz => clk_freq_hz
     )
     port map (
-      clk   => clk,
-      n_rst => n_blinking,
-      led   => led_blinking
+      clk         => clk,
+      n_rst       => n_rst_pwm,
+      pwm_freq_hz => pwm_freq_hz,
+      duty_cycle  => duty_cycle_pwm,
+      pwm_signal  => pwm_signal
     );
+
+  -- reset all system modules for signals to be initialized on startup
+  initialize_system : process (clk) is
+  begin
+
+    if rising_edge(clk) then
+      n_resetsr <= n_resetsr(2 downto 0) & '1';
+    end if;
+
+  end process initialize_system;
+
+  -- set all reset signals
+  n_rst_pwm   <= n_resetsr(3);
+  n_rst_state <= n_resetsr(3);
 
   -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (clk) is
+
   begin
 
-    -- default values for led_blink component
-    blink_freq_hz <= 0;
-    n_blinking    <= '0';
+    if (n_rst_state = '0') then
+      led         <= (others => 'U');
+      dim_counter <= 0;
+    else
+      if (rising_edge(clk)) then
 
-    case btn is
+        case btn is
 
-      -- if no button is pressed, every other LED should be turned on
-      when "00" =>
+          -- if no button is pressed, every other LED should be turned on
+          when "00" =>
 
-        led <= "0101";
+            led <= "0101";
 
-      -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
-      when "01" =>
+          -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
+          -- default led value
+          when "01" =>
 
-        -- set blink frequency
-        blink_freq_hz <= 2;
-        -- enable led_blink component
-        n_blinking <= '1';
-        -- forward led_blinking signal to actual leds
-        led <= led_blinking;
+            -- set blink frequency
+            pwm_freq_hz    <= 1;
+            duty_cycle_pwm <= 50;
+            -- forward led_blinking signal to actual leds
+            led <= (others => pwm_signal);
 
-      -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
-      -- of LEDs on and off (at least 4)
-      when "10" =>
+          -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
+          -- of LEDs on and off (at least 4)
+          when "10" =>
 
-        led <= "0100";
+            led <= "0100";
 
-      -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
-      when "11" =>
+          -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
+          when "11" =>
 
-        led <= "1000";
+            -- dims down led from full brightness to none in 3 seconds, lights up again when off
+            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, 120);
 
-      when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
+          when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 
-        led <= (others => 'X');
+            led <= (others => 'X');
 
-    end case;
+        end case;
+
+      end if;
+    end if;
 
   end process led_state_machine;
 

@@ -32,14 +32,14 @@ library ieee;
 
 entity pwmgenerator is
   generic (
-    clk_freq_hz : natural;
-    pwm_freq_hz : natural;
-    -- in percent from 0 to 100 (75 means 75% high 25% low)
-    duty_cycle : natural
+    clk_freq_hz : natural
   );
   port (
-    clk        : in    std_logic;
-    n_rst      : in    std_logic;
+    clk         : in    std_logic;
+    n_rst       : in    std_logic;
+    pwm_freq_hz : in    natural;
+    -- in percent from 0 to 100 (75 means 75% high 25% low)
+    duty_cycle : in    natural;
     pwm_signal : out   std_logic
   );
 end entity pwmgenerator;
@@ -51,6 +51,7 @@ architecture rtl of pwmgenerator is
 
 begin
 
+  -- TODO: Check for pwm_freq_hz and clk_freq_hz /= 0
   pwm : process (clk, n_rst) is
   begin
 
@@ -58,14 +59,15 @@ begin
       counter    <= 0;
       pwm_signal <= '0';
     else
-      if (rising_edge(clk)) then
+      -- NOTE: duty_cylce should not be 0
+      if (duty_cycle /= 0 and rising_edge(clk)) then
         counter <= counter + 1;
-        if (counter = (((clk_freq_hz / pwm_freq_hz) * duty_cycle) / 100) - 1) then
-          pwm_signal <= '0';
+        if (counter <= (((clk_freq_hz / pwm_freq_hz) * duty_cycle) / 100) - 1) then
+          pwm_signal <= '1';
         else
+          pwm_signal <= '0';
           if (counter = (clk_freq_hz / pwm_freq_hz) - 1) then
-            pwm_signal <= '1';
-            counter    <= 0;
+            counter <= 0;
           end if;
         end if;
       end if;
