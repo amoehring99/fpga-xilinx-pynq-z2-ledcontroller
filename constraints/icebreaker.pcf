@@ -1,6 +1,6 @@
 # 12 MHz clock
-set_io -nowarn CLK        35
-# set_frequency CLK 12
+set_io -nowarn clk        35
+#set_frequency  clk	  12
 
 # RS232
 set_io -nowarn RX          6
@@ -58,11 +58,11 @@ set_io -nowarn P2_9       20
 set_io -nowarn P2_10      18
 
 # LEDs and Buttons (PMOD 2)
-set_io -nowarn LED1       26
-set_io -nowarn LED2       27
-set_io -nowarn LED3       25
-set_io -nowarn LED4       23
-set_io -nowarn LED5       21
-set_io -nowarn BTN1       20
-set_io -nowarn BTN2       19
-set_io -nowarn BTN3       18
+set_io -nowarn led1       26
+set_io -nowarn led2       27
+set_io -nowarn led3       25
+set_io -nowarn led4       23
+set_io -nowarn led5       21
+set_io -nowarn btn1       20
+set_io -nowarn btn2       19
+set_io -nowarn btn3       18

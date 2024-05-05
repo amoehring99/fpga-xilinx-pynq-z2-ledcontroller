@@ -1,7 +1,8 @@
 # Variables
-VHDL_FILES = LED_Controller_PYNQ_top.vhd LEDController.vhd ../PWMGenerator/PWMGenerator.vhd
-TOP_MODULE = LED_Controller_PYNQ_top
+VHDL_FILES = LED_Controller_icebreaker_top.vhd LEDController.vhd ../PWMGenerator/PWMGenerator.vhd
+TOP_MODULE = LED_Controller_icebreaker_top
 BUILD_DIR = ../../build/LEDController
+PCF_FILE = ../../constraints/icebreaker.pcf
 
 # Main target
 all: analyze synthesize pnr generate_bitstream program_fpga clean
@@ -20,7 +21,7 @@ synthesize: analyze
 
 # Rule for place and route
 pnr: synthesize
-	nextpnr-ice40 --package hx1k --pcf $(TOP_MODULE).pcf --asc $(BUILD_DIR)/$(TOP_MODULE).asc --json $(BUILD_DIR)/$(TOP_MODULE).json
+	nextpnr-ice40 --up5k --package sg48 --freq 2 --pcf $(PCF_FILE) --asc $(BUILD_DIR)/$(TOP_MODULE).asc --json $(BUILD_DIR)/$(TOP_MODULE).json
 
 # Rule to generate bitstream
 generate_bitstream: pnr
