@@ -33,14 +33,16 @@ library ieee;
 entity led_controller_pynq_top is
   port (
     sysclk : in    std_logic;
-    btn    : in    std_logic_vector(1 downto 0);
+    sw     : in    std_logic_vector(1 downto 0);
     led    : out   std_logic_vector(3 downto 0)
   );
 end entity led_controller_pynq_top;
 
 architecture rtl of led_controller_pynq_top is
 
-  constant clk_freq_hz : natural := 120_000_000;
+  constant clk_freq_hz       : natural := 120_000_000;
+  constant pwm_freq_hz_blink : natural := 1;
+  constant pwm_freq_hz_dim   : natural := 120_000;
   -- THIS SIGNAL IS THE ONLY USE OF AN INITIAL VALUE.
   -- THIS MAY NEED TO CHANGE WHEN MIGRATING THIS DESIGN TO OTHER DEVICES.
   signal n_resetsr : std_logic_vector(3 downto 0) := (others => '0');
@@ -50,12 +52,14 @@ architecture rtl of led_controller_pynq_top is
   -- Component declaration
   component ledcontroller is
     generic (
-      clk_freq_hz : natural
+      clk_freq_hz       : natural;
+      pwm_freq_hz_blink : natural;
+      pwm_freq_hz_dim   : natural
     );
     port (
       clk   : in    std_logic;
       n_rst : in    std_logic;
-      btn   : in    std_logic_vector(1 downto 0);
+      sw    : in    std_logic_vector(1 downto 0);
       led   : out   std_logic_vector(3 downto 0)
     );
   end component;
@@ -75,12 +79,14 @@ begin
 
   i_ledcontroller : component ledcontroller
     generic map (
-      clk_freq_hz => clk_freq_hz
+      clk_freq_hz       => clk_freq_hz,
+      pwm_freq_hz_dim   => pwm_freq_hz_dim,
+      pwm_freq_hz_blink => pwm_freq_hz_blink
     )
     port map (
       clk   => sysclk,
       n_rst => n_rst,
-      btn   => btn,
+      sw    => sw,
       led   => led
     );
 

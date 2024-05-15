@@ -21,9 +21,9 @@
 library ieee;
   use ieee.std_logic_1164.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
--- use IEEE.NUMERIC_STD.ALL;
+  -- Uncomment the following library declaration if using
+  -- arithmetic functions with Signed or Unsigned values
+  use ieee.numeric_std.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -32,12 +32,12 @@ library ieee;
 
 entity pwmgenerator is
   generic (
-    clk_freq_hz : natural
+    clk_freq_hz : natural;
+    pwm_freq_hz : natural
   );
   port (
-    clk         : in    std_logic;
-    n_rst       : in    std_logic;
-    pwm_freq_hz : in    natural;
+    clk   : in    std_logic;
+    n_rst : in    std_logic;
     -- in percent from 0 to 100 (75 means 75% high 25% low)
     duty_cycle : in    natural;
     pwm_signal : out   std_logic
@@ -63,7 +63,11 @@ begin
       if (duty_cycle /= 0 and pwm_freq_hz /= 0 and clk_freq_hz /= 0 and rising_edge(clk)) then
         counter <= counter + 1;
         -- pwm signal should be high for first duty cycle percentage of the period
-        if (counter <= (((clk_freq_hz / pwm_freq_hz) * duty_cycle) / 100) - 1) then
+        -- shift right by 10 to divide by 1024 * 10 instead of 100 to avoid division
+        -- TODO: division takes ages, change to shift operation
+        -- change signal to generic if shift is not possible
+        -- can you shift a natural?
+        if (counter <= shift_right(to_unsigned(clk_freq_hz / pwm_freq_hz * duty_cycle, 64), 10) * 10 - 1) then
           pwm_signal <= '1';
         -- pwm signal should be low for the rest of the period
         else
