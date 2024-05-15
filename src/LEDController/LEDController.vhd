@@ -32,65 +32,21 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    clk_freq_hz : natural
+    clk_freq_hz : natural := 125_000_000
   );
   port (
-    clk   : in    std_logic;
-    n_rst : in    std_logic;
-    btn   : in    std_logic_vector(1 downto 0);
-    led   : out   std_logic_vector(3 downto 0)
+    clk : in    std_logic;
+    btn : in    std_logic_vector(1 downto 0);
+    led : out   std_logic_vector(3 downto 0)
   );
 end entity ledcontroller;
 
 architecture rtl of ledcontroller is
 
-  signal n_rst_state    : std_logic;
-  signal n_rst_pwm      : std_logic;
+  signal n_rst_pwm      : std_logic := '0';
   signal pwm_freq_hz    : natural;
-  signal pwm_signal     : std_logic;
+  signal pwm_signal     : std_logic := '0';
   signal duty_cycle_pwm : natural;
-
-  signal dim_counter : natural;
-
-  -- TODO: initialize duty cycle to 100 (full brightness)
-  -- atm it is still set to 50 when the procedure is called
-  -- because it is still set from the previous state
-  -- try checking for last state and reset pwm generator when state changes
-
-  procedure dim_led (
-
-    signal dim_pwm_signal : in std_logic;
-
-    signal dim_led         : out std_logic_vector(3 downto 0);
-    signal dim_pwm_freq_hz : out natural;
-
-    signal dim_duty_cycle_pwm : inout natural;
-    -- counts clock cycles until duty cycle (brightness) of led is decreased by 1%
-    signal io_dim_counter : inout natural;
-
-    constant dim_rate : in natural
-  ) is
-  begin
-
-    dim_pwm_freq_hz <= clk_freq_hz / 1000;
-
-    -- count clock cycles until duty cycle (brightness) of led should be decreased by 1%
-    if (io_dim_counter >= dim_rate) then
-      io_dim_counter <= 0;
-      if (dim_duty_cycle_pwm > 0) then
-        dim_duty_cycle_pwm <= dim_duty_cycle_pwm - 1;
-      else
-        -- wrap arround when duty cycle is 0 (turn led back on)
-        dim_duty_cycle_pwm <= 100;
-      end if;
-    else
-      io_dim_counter <= io_dim_counter + 1;
-    end if;
-
-    -- forward pwm signal to actual leds
-    dim_led <= (others => dim_pwm_signal);
-
-  end procedure;
 
   component pwmgenerator is
     generic (
@@ -119,62 +75,53 @@ begin
       pwm_signal  => pwm_signal
     );
 
-  -- set all reset signals to initialize processes
-  n_rst_pwm   <= n_rst;
-  n_rst_state <= n_rst;
-
   -- TODO: statemachine not generic for led_count and btn_count
   led_state_machine : process (clk) is
-
   begin
 
-    -- state machine reset to initialize values
-    if (n_rst_state = '0') then
-      led            <= (others => 'U');
-      dim_counter    <= 0;
-      duty_cycle_pwm <= 0;
-      dim_counter    <= 0;
-      pwm_freq_hz    <= 0;
-    else
-      if (rising_edge(clk)) then
+    -- default values for led_blink component
+    -- pwm_freq_hz <= 0;
+    -- n_rst_pwm <= '0';
 
-        case btn is
+    case btn is
 
-          -- if no button is pressed, every other LED should be turned on
-          when "00" =>
+      -- if no button is pressed, every other LED should be turned on
+      when "00" =>
 
-            led <= "0101";
+        led <= "0101";
 
-          -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
-          -- default led value
-          when "01" =>
+      -- TODO: if button 0 is pressed, all LEDs should blink with a period of 0.5 seconds
+      -- default led value
+      when "01" =>
 
-            -- set blink frequency
-            pwm_freq_hz    <= 1;
-            duty_cycle_pwm <= 50;
-            -- forward led_blinking signal to actual leds
-            led <= (others => pwm_signal);
+        -- set blink frequency
+        pwm_freq_hz    <= 1;
+        duty_cycle_pwm <= 50;
+        -- enable led_blink component
+        -- TODO: how to set rst without multiple drivers
+        -- if clause check causes half clock cycle delay
+        -- setting in time woithput resetting first cuases pwm signal to
+        -- be undefined
+        n_rst_pwm <= '1';
+        -- forward led_blinking signal to actual leds
+        led <= (others => pwm_signal);
 
-          -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
-          -- of LEDs on and off (at least 4)
-          when "10" =>
+      -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
+      -- of LEDs on and off (at least 4)
+      when "10" =>
 
-            led <= "0100";
+        led <= "0100";
 
-          -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
-          when "11" =>
+      -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
+      when "11" =>
 
-            -- dims down led from full brightness to none in 3 seconds, lights up again when off
-            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, clk_freq_hz / 33);
+        led <= "1000";
 
-          when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
+      when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 
-            led <= (others => 'X');
+        led <= (others => 'X');
 
-        end case;
-
-      end if;
-    end if;
+    end case;
 
   end process led_state_machine;
 
