@@ -59,22 +59,24 @@ begin
       counter    <= 0;
       pwm_signal <= '0';
     else
-      -- check for valid duty cycle, pwm frequency and clock frequency
-      if (duty_cycle /= 0 and pwm_freq_hz /= 0 and clk_freq_hz /= 0 and rising_edge(clk)) then
-        counter <= counter + 1;
-        -- pwm signal should be high for first duty cycle percentage of the period
-        -- shift right by 10 to divide by 1024 * 10 instead of 100 to avoid division
-        -- TODO: division takes ages, change to shift operation
-        -- change signal to generic if shift is not possible
-        -- can you shift a natural?
-        if (counter <= shift_right(to_unsigned(clk_freq_hz / pwm_freq_hz * duty_cycle, 64), 10) * 10 - 1) then
-          pwm_signal <= '1';
-        -- pwm signal should be low for the rest of the period
-        else
-          pwm_signal <= '0';
-          -- reset counter at the end of the period
-          if (counter = (clk_freq_hz / pwm_freq_hz) - 1) then
-            counter <= 0;
+      -- reset counter at the end of the period
+      if (counter >= (clk_freq_hz / pwm_freq_hz) - 1) then
+        counter    <= 0;
+        pwm_signal <= '0';
+      else
+        -- check for valid duty cycle, pwm frequency and clock frequency
+        if (duty_cycle /= 0 and pwm_freq_hz /= 0 and clk_freq_hz /= 0 and rising_edge(clk)) then
+          counter <= counter + 1;
+          -- pwm signal should be high for first duty cycle percentage of the period
+          -- shift right by 10 to divide by 1024 * 10 instead of 100 to avoid division
+          -- TODO: division takes ages, change to shift operation
+          -- change signal to generic if shift is not possible
+          -- can you shift a natural?
+          if (counter <= shift_right(to_unsigned(clk_freq_hz / pwm_freq_hz * duty_cycle, 64), 10) * 10) then
+            pwm_signal <= '1';
+          -- pwm signal should be low for the rest of the period
+          else
+            pwm_signal <= '0';
           end if;
         end if;
       end if;

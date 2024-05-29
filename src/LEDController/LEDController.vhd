@@ -21,9 +21,9 @@
 library ieee;
   use ieee.std_logic_1164.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
--- use IEEE.NUMERIC_STD.ALL;
+  -- Uncomment the following library declaration if using
+  -- arithmetic functions with Signed or Unsigned values
+  use ieee.numeric_std.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -52,6 +52,8 @@ architecture rtl of ledcontroller is
   signal pwm_signal_blink : std_logic;
   signal duty_cycle_blink : natural;
 
+  -- 0 means fading out, 1 means glowing up
+  signal dim_state      : std_logic;
   signal pwm_signal_dim : std_logic;
   signal duty_cycle_dim : natural;
 
@@ -68,6 +70,8 @@ architecture rtl of ledcontroller is
 
     signal dim_led : out std_logic_vector(3 downto 0);
 
+    signal dim_state : inout std_logic;
+
     signal dim_duty_cycle_pwm : inout natural;
     -- counts clock cycles until duty cycle (brightness) of led is decreased by 1%
     signal io_dim_counter : inout natural;
@@ -76,17 +80,19 @@ architecture rtl of ledcontroller is
   ) is
   begin
 
+    io_dim_counter <= io_dim_counter + 1;
     -- count clock cycles until duty cycle (brightness) of led should be decreased by 1%
     if (io_dim_counter >= dim_rate) then
       io_dim_counter <= 0;
-      if (dim_duty_cycle_pwm > 0) then
+      if (dim_state = '0' and dim_duty_cycle_pwm = 0) then
+        dim_state <= '1';
+      elsif (dim_state = '1' and dim_duty_cycle_pwm = 100) then
+        dim_state <= '0';
+      elsif (dim_state = '0') then
         dim_duty_cycle_pwm <= dim_duty_cycle_pwm - 1;
-      else
-        -- wrap arround when duty cycle is 0 (turn led back on)
-        dim_duty_cycle_pwm <= 100;
+      elsif (dim_state = '1') then
+        dim_duty_cycle_pwm <= dim_duty_cycle_pwm + 1;
       end if;
-    else
-      io_dim_counter <= io_dim_counter + 1;
     end if;
 
     -- forward pwm signal to actual leds
@@ -146,6 +152,7 @@ begin
     if (n_rst_state = '0') then
       led              <= (others => 'U');
       dim_counter      <= 0;
+      dim_state        <= '0';
       duty_cycle_dim   <= 0;
       duty_cycle_blink <= 0;
       dim_counter      <= 0;
@@ -177,8 +184,8 @@ begin
           -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
           when "11" =>
 
-            -- dims down led from full brightness to none in 3 seconds, lights up again when off
-            dim_led(pwm_signal_dim, led, duty_cycle_dim, dim_counter, 1_200_000_000);
+            -- dims down led from full brightness to none in ~3 seconds, lights up again when off
+            dim_led(pwm_signal_dim, led, dim_state, duty_cycle_dim, dim_counter, to_integer(shift_right(to_unsigned(clk_freq_hz, 64), 5)));
 
           when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 

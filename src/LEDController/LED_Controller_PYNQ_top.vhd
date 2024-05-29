@@ -40,9 +40,9 @@ end entity led_controller_pynq_top;
 
 architecture rtl of led_controller_pynq_top is
 
-  constant clk_freq_hz       : natural := 120_000_000;
+  constant clk_freq_hz       : natural := 125_000_000;
   constant pwm_freq_hz_blink : natural := 1;
-  constant pwm_freq_hz_dim   : natural := 120_000;
+  constant pwm_freq_hz_dim   : natural := 125;
   -- THIS SIGNAL IS THE ONLY USE OF AN INITIAL VALUE.
   -- THIS MAY NEED TO CHANGE WHEN MIGRATING THIS DESIGN TO OTHER DEVICES.
   signal n_resetsr : std_logic_vector(3 downto 0) := (others => '0');
