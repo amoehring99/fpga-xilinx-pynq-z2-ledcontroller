@@ -21,9 +21,9 @@
 library ieee;
   use ieee.std_logic_1164.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
--- use IEEE.NUMERIC_STD.ALL;
+  -- Uncomment the following library declaration if using
+  -- arithmetic functions with Signed or Unsigned values
+  use ieee.numeric_std.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -32,23 +32,30 @@ library ieee;
 
 entity ledcontroller is
   generic (
-    clk_freq_hz : natural
+    clk_freq_hz       : natural;
+    pwm_freq_hz_blink : natural;
+    pwm_freq_hz_dim   : natural
   );
   port (
     clk   : in    std_logic;
     n_rst : in    std_logic;
-    btn   : in    std_logic_vector(1 downto 0);
+    sw    : in    std_logic_vector(1 downto 0);
     led   : out   std_logic_vector(3 downto 0)
   );
 end entity ledcontroller;
 
 architecture rtl of ledcontroller is
 
-  signal n_rst_state    : std_logic;
-  signal n_rst_pwm      : std_logic;
-  signal pwm_freq_hz    : natural;
-  signal pwm_signal     : std_logic;
-  signal duty_cycle_pwm : natural;
+  signal n_rst_state : std_logic;
+  signal n_rst_pwm   : std_logic;
+
+  signal pwm_signal_blink : std_logic;
+  signal duty_cycle_blink : natural;
+
+  -- 0 means fading out, 1 means glowing up
+  signal dim_state      : std_logic;
+  signal pwm_signal_dim : std_logic;
+  signal duty_cycle_dim : natural;
 
   signal dim_counter : natural;
 
@@ -61,8 +68,9 @@ architecture rtl of ledcontroller is
 
     signal dim_pwm_signal : in std_logic;
 
-    signal dim_led         : out std_logic_vector(3 downto 0);
-    signal dim_pwm_freq_hz : out natural;
+    signal dim_led : out std_logic_vector(3 downto 0);
+
+    signal dim_state : inout std_logic;
 
     signal dim_duty_cycle_pwm : inout natural;
     -- counts clock cycles until duty cycle (brightness) of led is decreased by 1%
@@ -72,19 +80,19 @@ architecture rtl of ledcontroller is
   ) is
   begin
 
-    dim_pwm_freq_hz <= clk_freq_hz / 1000;
-
+    io_dim_counter <= io_dim_counter + 1;
     -- count clock cycles until duty cycle (brightness) of led should be decreased by 1%
     if (io_dim_counter >= dim_rate) then
       io_dim_counter <= 0;
-      if (dim_duty_cycle_pwm > 0) then
+      if (dim_state = '0' and dim_duty_cycle_pwm = 0) then
+        dim_state <= '1';
+      elsif (dim_state = '1' and dim_duty_cycle_pwm = 100) then
+        dim_state <= '0';
+      elsif (dim_state = '0') then
         dim_duty_cycle_pwm <= dim_duty_cycle_pwm - 1;
-      else
-        -- wrap arround when duty cycle is 0 (turn led back on)
-        dim_duty_cycle_pwm <= 100;
+      elsif (dim_state = '1') then
+        dim_duty_cycle_pwm <= dim_duty_cycle_pwm + 1;
       end if;
-    else
-      io_dim_counter <= io_dim_counter + 1;
     end if;
 
     -- forward pwm signal to actual leds
@@ -94,51 +102,64 @@ architecture rtl of ledcontroller is
 
   component pwmgenerator is
     generic (
-      clk_freq_hz : natural
+      clk_freq_hz : natural;
+      pwm_freq_hz : in    natural
     );
     port (
-      clk         : in    std_logic;
-      n_rst       : in    std_logic;
-      pwm_freq_hz : in    natural;
-      duty_cycle  : in    natural;
-      pwm_signal  : out   std_logic
+      clk        : in    std_logic;
+      n_rst      : in    std_logic;
+      duty_cycle : in    natural;
+      pwm_signal : out   std_logic
     );
   end component pwmgenerator;
 
 begin
 
-  i_pwmgenerator : component pwmgenerator
+  i_pwmgenerator_blink : component pwmgenerator
     generic map (
-      clk_freq_hz => clk_freq_hz
+      clk_freq_hz => clk_freq_hz,
+      pwm_freq_hz => pwm_freq_hz_blink
     )
     port map (
-      clk         => clk,
-      n_rst       => n_rst_pwm,
-      pwm_freq_hz => pwm_freq_hz,
-      duty_cycle  => duty_cycle_pwm,
-      pwm_signal  => pwm_signal
+      clk        => clk,
+      n_rst      => n_rst_pwm,
+      duty_cycle => duty_cycle_blink,
+      pwm_signal => pwm_signal_blink
+    );
+
+  i_pwmgenerator_dim : component pwmgenerator
+    generic map (
+      clk_freq_hz => clk_freq_hz,
+      pwm_freq_hz => pwm_freq_hz_dim
+    )
+    port map (
+      clk        => clk,
+      n_rst      => n_rst_pwm,
+      duty_cycle => duty_cycle_dim,
+      pwm_signal => pwm_signal_dim
     );
 
   -- set all reset signals to initialize processes
   n_rst_pwm   <= n_rst;
   n_rst_state <= n_rst;
 
-  -- TODO: statemachine not generic for led_count and btn_count
+  -- TODO: statemachine not generic for led_count and sw_count
   led_state_machine : process (clk) is
 
   begin
 
     -- state machine reset to initialize values
     if (n_rst_state = '0') then
-      led            <= (others => 'U');
-      dim_counter    <= 0;
-      duty_cycle_pwm <= 0;
-      dim_counter    <= 0;
-      pwm_freq_hz    <= 0;
+      led              <= (others => 'U');
+      dim_counter      <= 0;
+      dim_state        <= '0';
+      duty_cycle_dim   <= 0;
+      duty_cycle_blink <= 0;
+      dim_counter      <= 0;
     else
       if (rising_edge(clk)) then
 
-        case btn is
+        case sw is
 
           -- if no button is pressed, every other LED should be turned on
           when "00" =>
@@ -150,10 +171,9 @@ begin
           when "01" =>
 
             -- set blink frequency
-            pwm_freq_hz    <= 1;
-            duty_cycle_pwm <= 50;
+            duty_cycle_blink <= 50;
             -- forward led_blinking signal to actual leds
-            led <= (others => pwm_signal);
+            led <= (others => pwm_signal_blink);
 
           -- TODO: if button 1 is pressed, LEDs should be slowly blinking with different patterns
           -- of LEDs on and off (at least 4)
@@ -164,8 +184,8 @@ begin
           -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
           when "11" =>
 
-            -- dims down led from full brightness to none in 3 seconds, lights up again when off
-            dim_led(pwm_signal, led, pwm_freq_hz, duty_cycle_pwm, dim_counter, 120);
+            -- dims down led from full brightness to none in ~3 seconds, lights up again when off
+            dim_led(pwm_signal_dim, led, dim_state, duty_cycle_dim, dim_counter, to_integer(shift_right(to_unsigned(clk_freq_hz, 64), 5)));
 
           when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 
