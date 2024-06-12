@@ -17,6 +17,12 @@
 -- Additional Comments:
 --
 ----------------------------------------------------------------------------------
+package common is
+
+  type t_pattern is (left, right, inside, outside, none);
+
+end package common;
+  use work.common.all;
 
 library ieee;
   use ieee.std_logic_1164.all;
@@ -46,8 +52,9 @@ end entity ledcontroller;
 
 architecture rtl of ledcontroller is
 
-  signal n_rst_state : std_logic;
-  signal n_rst_pwm   : std_logic;
+  signal n_rst_state   : std_logic;
+  signal n_rst_pwm     : std_logic;
+  signal n_rst_pattern : std_logic;
 
   signal pwm_signal_blink : std_logic;
   signal duty_cycle_blink : natural;
@@ -56,8 +63,9 @@ architecture rtl of ledcontroller is
   signal dim_state      : std_logic;
   signal pwm_signal_dim : std_logic;
   signal duty_cycle_dim : natural;
+  signal dim_counter    : natural;
 
-  signal dim_counter : natural;
+  signal pattern_led : std_logic_vector(3 downto 0);
 
   -- TODO: initialize duty cycle to 100 (full brightness)
   -- atm it is still set to 50 when the procedure is called
@@ -113,6 +121,14 @@ architecture rtl of ledcontroller is
     );
   end component pwmgenerator;
 
+  component ledpattern is
+    port (
+      clk   : in    std_logic;
+      n_rst : in    std_logic;
+      led   : out   std_logic_vector(3 downto 0)
+    );
+  end component ledpattern;
+
 begin
 
   i_pwmgenerator_blink : component pwmgenerator
@@ -139,9 +155,17 @@ begin
       pwm_signal => pwm_signal_dim
     );
 
+  i_led_pattern : component ledpattern
+    port map (
+      clk   => pwm_signal_blink,
+      n_rst => n_rst_pattern,
+      led   => pattern_led
+    );
+
   -- set all reset signals to initialize processes
-  n_rst_pwm   <= n_rst;
-  n_rst_state <= n_rst;
+  n_rst_pwm     <= n_rst;
+  n_rst_state   <= n_rst;
+  n_rst_pattern <= n_rst;
 
   -- TODO: statemachine not generic for led_count and sw_count
   led_state_machine : process (clk) is
@@ -179,13 +203,15 @@ begin
           -- of LEDs on and off (at least 4)
           when "10" =>
 
-            led <= "0100";
+            duty_cycle_blink <= 50;
+            led              <= pattern_led;
 
           -- TODO: if both buttons are pressed, all LEDs should be automatically glowing and fading
           when "11" =>
 
             -- dims down led from full brightness to none in ~3 seconds, lights up again when off
-            dim_led(pwm_signal_dim, led, dim_state, duty_cycle_dim, dim_counter, to_integer(shift_right(to_unsigned(clk_freq_hz, 64), 5)));
+            dim_led(pwm_signal_dim, led, dim_state, duty_cycle_dim, dim_counter,
+                    to_integer(shift_right(to_unsigned(clk_freq_hz, 64), 5)));
 
           when others => -- 'U', 'X', 'W', 'Z', 'L', 'H', '-
 

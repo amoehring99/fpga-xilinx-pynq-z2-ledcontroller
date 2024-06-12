@@ -100,11 +100,11 @@ begin
   begin
 
     sw <= "00";
-    wait for 1 sec;
+    wait for 10 sec;
     sw <= "01";
-    wait for 1 sec;
+    wait for 10 sec;
     sw <= "10";
-    wait for 1 sec;
+    wait for 10 sec;
     sw <= "11";
     wait;
 
